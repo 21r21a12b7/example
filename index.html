@@ -5,10 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Full Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
     <style>
         body {
             margin: 0;
             font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
         #first-div {
             display: flex;
@@ -17,6 +21,7 @@
             background-color: #ffffff;
             padding: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            z-index: 1000; /* Ensure the div stays on top */
         }
         #backButton {
             width: 28px;
@@ -31,7 +36,7 @@
             font-weight: bold;
         }
         #map-div {
-            height: 100vh;
+            flex: 1; /* This makes the map-div take up the remaining space */
             width: 100%;
         }
     </style>
@@ -45,6 +50,7 @@
     <div id="map-div"></div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
     <script>
         function goBack() {
             window.history.back();
@@ -61,26 +67,48 @@
             maxZoom: 19,
         }).addTo(map);
 
-        // Function to handle geolocation
+        // Custom icon
+        const customIcon = L.icon({
+            iconUrl: 'img/myLocation.svg',
+            iconSize: [28, 28], // size of the icon
+            iconAnchor: [14, 14], // point of the icon which will correspond to marker's location
+            popupAnchor: [0, -14] // point from which the popup should open relative to the iconAnchor
+        });
+
+        // Function to handle geolocation success
         function onLocationFound(e) {
-            const radius = e.accuracy / 2;
-            L.marker(e.latlng).addTo(map)
-                // .bindPopup("You are within " + radius + " meters from this point").openPopup();
-            L.circle(e.latlng, radius).addTo(map);
+            L.marker(e.latlng, {icon: customIcon}).addTo(map)
+                .bindPopup("You are here").openPopup();
             map.setView(e.latlng, 13);
         }
 
+        // Function to handle geolocation error
         function onLocationError(e) {
-            alert(e.message);
+            L.marker(defaultCoords, {icon: customIcon}).addTo(map)
+                .bindPopup("Default location").openPopup();
             map.setView(defaultCoords, 13);
         }
 
-        // Try to get the user's location
-        map.locate({ setView: true, maxZoom: 13 });
+        // Add the locate control to the map
+        L.control.locate({
+            position: 'topright',
+            setView: true,
+            keepCurrentZoomLevel: true,
+            strings: {
+                title: "Show me where I am"
+            },
+            locateOptions: {
+                maxZoom: 13,
+                enableHighAccuracy: true
+            }
+        }).addTo(map);
 
         // Event listeners for location found and location error
         map.on('locationfound', onLocationFound);
         map.on('locationerror', onLocationError);
+
+        // Initial location attempt
+        map.locate({setView: true, maxZoom: 13});
     </script>
 </body>
 </html>
