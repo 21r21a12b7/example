@@ -58,6 +58,7 @@
 
         // Default coordinates
         const defaultCoords = [17.595325, 78.441572];
+        let locationMarker; // Global variable to hold the marker reference
 
         // Initialize the map
         const map = L.map('map-div').setView(defaultCoords, 13);
@@ -77,15 +78,27 @@
 
         // Function to handle geolocation success
         function onLocationFound(e) {
-            L.marker(e.latlng, {icon: customIcon}).addTo(map)
-                .bindPopup("You are here").openPopup();
+            if (locationMarker) {
+                // Update the existing marker's position
+                locationMarker.setLatLng(e.latlng);
+            } else {
+                // Create a new marker if it doesn't exist
+                locationMarker = L.marker(e.latlng, {icon: customIcon}).addTo(map)
+                    .bindPopup("You are here").openPopup();
+            }
             map.setView(e.latlng, 13);
         }
 
         // Function to handle geolocation error
         function onLocationError(e) {
-            L.marker(defaultCoords, {icon: customIcon}).addTo(map)
-                .bindPopup("Default location").openPopup();
+            if (locationMarker) {
+                // Update the existing marker's position to default
+                locationMarker.setLatLng(defaultCoords);
+            } else {
+                // Create a new marker if it doesn't exist
+                locationMarker = L.marker(defaultCoords, {icon: customIcon}).addTo(map)
+                    .bindPopup("Default location").openPopup();
+            }
             map.setView(defaultCoords, 13);
         }
 
