@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Full Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+        }
+        #first-div {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background-color: #ffffff;
+            padding: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        #backButton {
+            width: 28px;
+            height: 28px;
+            margin-left: 1%;
+            cursor: pointer;
+        }
+        .centered-text {
+            flex: 1;
+            text-align: center;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+        #map-div {
+            height: 100vh;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div id="first-div">
+        <img id="backButton" src="img/backArrow.svg" alt="Back Button" onclick="goBack()">
+        <div class="centered-text">Full Map</div>
+        <div style="width: 28px;"></div> <!-- This is a spacer div to balance the layout -->
+    </div>
+    <div id="map-div"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        function goBack() {
+            window.history.back();
+        }
+
+        // Default coordinates
+        const defaultCoords = [17.595325, 78.441572];
+
+        // Initialize the map
+        const map = L.map('map-div').setView(defaultCoords, 13);
+
+        // Add the OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        // Function to handle geolocation
+        function onLocationFound(e) {
+            const radius = e.accuracy / 2;
+            L.marker(e.latlng).addTo(map)
+                // .bindPopup("You are within " + radius + " meters from this point").openPopup();
+            L.circle(e.latlng, radius).addTo(map);
+            map.setView(e.latlng, 13);
+        }
+
+        function onLocationError(e) {
+            alert(e.message);
+            map.setView(defaultCoords, 13);
+        }
+
+        // Try to get the user's location
+        map.locate({ setView: true, maxZoom: 13 });
+
+        // Event listeners for location found and location error
+        map.on('locationfound', onLocationFound);
+        map.on('locationerror', onLocationError);
+    </script>
+</body>
+</html>
