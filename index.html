@@ -13,8 +13,13 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
+            overflow: hidden; /* Prevent scrollbars */
         }
         #first-div {
+            position: fixed; /* Make sure the div is fixed */
+            top: 0;
+            left: 0;
+            right: 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -36,8 +41,15 @@
             font-weight: bold;
         }
         #map-div {
-            flex: 1; /* This makes the map-div take up the remaining space */
-            width: 100%;
+            position: absolute; /* Position the map-div absolutely */
+            top: 50px; /* Set top to the height of the fixed div */
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+        .leaflet-control-zoom {
+            right: 10px; /* Position the zoom control on the right side */
+            top: 10px; /* Adjust as needed */
         }
     </style>
 </head>
@@ -56,72 +68,44 @@
             window.history.back();
         }
 
-        // Default coordinates
-        const defaultCoords = [17.595325, 78.441572];
-        let locationMarker; // Global variable to hold the marker reference
+        // Initialize Leaflet map
+        var map = L.map('map-div', {
+            zoomControl: false // Disable default zoom controls
+        }).setView([51.505, -0.09], 13); // Default coordinates and zoom
 
-        // Initialize the map
-        const map = L.map('map-div').setView(defaultCoords, 13);
-
-        // Add the OpenStreetMap tiles
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
         }).addTo(map);
 
-        // Custom icon
-        const customIcon = L.icon({
-            iconUrl: 'img/deviceLocation.svg',
-            iconSize: [28, 28], // size of the icon
-            iconAnchor: [14, 14], // point of the icon which will correspond to marker's location
-            popupAnchor: [0, -14] // point from which the popup should open relative to the iconAnchor
-        });
+        // Check for geolocation support and get current position
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(position) {
+                var lat = position.coords.latitude;
+                var lng = position.coords.longitude;
 
-        // Function to handle geolocation success
-        function onLocationFound(e) {
-            if (locationMarker) {
-                // Update the existing marker's position
-                locationMarker.setLatLng(e.latlng);
-            } else {
-                // Create a new marker if it doesn't exist
-                locationMarker = L.marker(e.latlng, {icon: customIcon}).addTo(map)
-                    .bindPopup("You are here").openPopup();
-            }
-            map.setView(e.latlng, 13);
+                // Center the map on the current location
+                map.setView([lat, lng], 13);
+
+                // Create a custom icon for the marker
+                var customIcon = L.icon({
+                    iconUrl: 'img/deviceLocation.svg', // Path to your custom marker image
+                    iconSize: [32, 32], // Size of the icon
+                    iconAnchor: [16, 32], // Point of the icon which will correspond to marker's location
+                    popupAnchor: [0, -32] // Point from which the popup should open relative to the iconAnchor
+                });
+
+                // Add a marker with the custom icon for the current location
+                L.marker([lat, lng], { icon: customIcon }).addTo(map)
+                    .bindPopup('You are here!')
+                    .openPopup();
+            }, function(error) {
+                // Handle errors
+                alert('Unable to retrieve your location. Please check your location settings.');
+            });
+        } else {
+            alert('Geolocation is not supported by this browser.');
         }
 
-        // Function to handle geolocation error
-        function onLocationError(e) {
-            if (locationMarker) {
-                // Update the existing marker's position to default
-                locationMarker.setLatLng(defaultCoords);
-            } else {
-                // Create a new marker if it doesn't exist
-                locationMarker = L.marker(defaultCoords, {icon: customIcon}).addTo(map)
-                    .bindPopup("Default location").openPopup();
-            }
-            map.setView(defaultCoords, 13);
-        }
-
-        // Add the locate control to the map
-        L.control.locate({
-            position: 'topright',
-            setView: true,
-            keepCurrentZoomLevel: true,
-            strings: {
-                title: "Show me where I am"
-            },
-            locateOptions: {
-                maxZoom: 13,
-                enableHighAccuracy: true
-            }
-        }).addTo(map);
-
-        // Event listeners for location found and location error
-        map.on('locationfound', onLocationFound);
-        map.on('locationerror', onLocationError);
-
-        // Initial location attempt
-        map.locate({setView: true, maxZoom: 13});
     </script>
 </body>
 </html>
