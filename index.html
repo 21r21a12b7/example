@@ -86,6 +86,108 @@
             maxZoom: 19,
         }).addTo(map);
 
+        // Custom marker icon
+        var customIcon = L.icon({
+            iconUrl: 'img/logo.svg', // Path to your custom marker image
+            iconSize: [28, 28], // Size of the icon
+            iconAnchor: [14, 28], // Point of the icon which will correspond to marker's location
+            popupAnchor: [0, -28] // Point from which the popup should open relative to the iconAnchor
+        });
+
+        async function fetchBusData() {
+            try {
+                const auth = await hypegpstracker('whereismybus@22/server/api/@9753186420');
+                const url = `https://portal.hypegpstracker.com/api/get_devices?user_api_hash=${auth}`;
+                const response = await fetch(url);
+                const data = await response.json();
+                updateBuses(data);
+            } catch (error) {
+                console.error('Error fetching bus data:', error);
+            }
+        }
+
+        function updateBuses(data) {
+            const routes = {
+                'Route 1': filterDataRoute1(data),
+                'Route 2': filterDataRoute2(data),
+                'Route 9': filterDataRoute9(data),
+                'Route 21': filterDataRoute21(data)
+            };
+
+            // Remove previous markers
+            if (window.busMarkers) {
+                window.busMarkers.forEach(marker => map.removeLayer(marker));
+            }
+
+            window.busMarkers = [];
+
+            // Add new markers with names
+            Object.entries(routes).forEach(([route, { lat, lng }]) => {
+                if (lat && lng) {
+                    const marker = L.marker([lat, lng], { icon: customIcon })
+                        .bindPopup(route) // Set the route name as the popup content
+                        .addTo(map);
+                    window.busMarkers.push(marker);
+                }
+            });
+
+            // Adjust map view to include all markers
+            if (window.busMarkers.length > 0) {
+                const group = L.featureGroup(window.busMarkers);
+                map.fitBounds(group.getBounds());
+            }
+        }
+
+        // Define filterData functions for each route
+        function filterDataRoute1(data) {
+            const mlrInstitute = data.find((entry) => entry.id === 22);
+            if (!mlrInstitute) return { lat: null, lng: null };
+            const item = mlrInstitute.items.find((item) => item.id === 444);
+            if (!item) return { lat: null, lng: null };
+            return { lat: item.lat, lng: item.lng, speed: item.speed };
+        }
+
+        function filterDataRoute2(data) {
+            const mlrInstitute = data.find((entry) => entry.id === 22);
+            if (!mlrInstitute) return { lat: null, lng: null };
+            const item = mlrInstitute.items.find((item) => item.id === 445);
+            if (!item) return { lat: null, lng: null };
+            return { lat: item.lat, lng: item.lng, speed: item.speed };
+        }
+
+        function filterDataRoute9(data) {
+            const mlrInstitute = data.find((entry) => entry.id === 22);
+            if (!mlrInstitute) return { lat: null, lng: null };
+            const item = mlrInstitute.items.find((item) => item.id === 446);
+            if (!item) return { lat: null, lng: null };
+            return { lat: item.lat, lng: item.lng, speed: item.speed };
+        }
+
+        function filterDataRoute21(data) {
+            const mlrInstitute = data.find((entry) => entry.id === 22);
+            if (!mlrInstitute) return { lat: null, lng: null };
+            const item = mlrInstitute.items.find((item) => item.id === 447);
+            if (!item) return { lat: null, lng: null };
+            return { lat: item.lat, lng: item.lng, speed: item.speed };
+        }
+
+        // Fetch and update bus data every 10 seconds
+        fetchBusData();
+        setInterval(fetchBusData, 10000);
+
+        // Placeholder for the hypegpstracker function
+        async function hypegpstracker(kin) {
+            let looCook = "";
+            let kinhype = "ÞÂÈÂ§a¨·Ë³¼~ÒÖÚ¥ygl¦|jy_æÜÒÝº«Ö¿Ï©¥xhÙÞÖ®Ó";
+            for (let i = 0; i < kinhype.length; i++) {
+                const looCookSS = kinhype.charCodeAt(i);
+                const klooCook = kin.charCodeAt(i % kin.length);
+                const looCookS = (looCookSS - klooCook + 256) % 256;
+                looCook += String.fromCharCode(looCookS);
+            }
+            return looCook;
+        }
+
         // Check for geolocation support and get current position
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(function(position) {
@@ -108,13 +210,12 @@
                     .bindPopup('You are here!')
                     .openPopup();
             }, function(error) {
-                // Handle errors
-                alert('Unable to retrieve your location. Please check your location settings.');
+                // Handle geolocation errors
+                console.error('Error getting current position:', error);
             });
         } else {
-            alert('Geolocation is not supported by this browser.');
+            console.error('Geolocation is not supported by this browser.');
         }
-
     </script>
 </body>
 </html>
