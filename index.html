@@ -109,14 +109,14 @@
                 const data = await response.json();
 
                 const busData = {
-                    // bus1: filterBusData(data, 444),
-                    // bus2: filterBusData(data, 445),
-                    // bus9: filterBusData(data, 446),
-                    // bus21: filterBusData(data, 447)
+                    bus1: filterBusData(data, 444),
+                    bus2: filterBusData(data, 445),
+                    bus9: filterBusData(data, 446),
+                    bus21: filterBusData(data, 447)
 
-                    bus1: filterBusData(data, 378),
-                    bus2: filterBusData(data, 382),
-                    bus9: filterBusData(data, 388),
+                    // bus1: filterBusData(data, 378),
+                    // bus2: filterBusData(data, 382),
+                    // bus9: filterBusData(data, 388),
                 };
 
                 // Update device location marker
@@ -132,7 +132,7 @@
         }
 
         function filterBusData(data, itemId) {
-            const mlrInstitute = data.find((entry) => entry.id === 23);
+            const mlrInstitute = data.find((entry) => entry.id === 22);
             if (!mlrInstitute) return null;
 
             const item = mlrInstitute.items.find((item) => item.id === itemId);
