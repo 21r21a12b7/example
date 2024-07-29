@@ -149,7 +149,6 @@
 
                 if (deviceLocationMarker) {
                     deviceLocationMarker.setLatLng([latitude, longitude]);
-                    deviceLocationMarker.openPopup(); // Open popup for existing marker
                 } else {
                     deviceLocationMarker = L.marker([latitude, longitude], {
                         icon: L.icon({
@@ -236,7 +235,7 @@
             });
 
             // Set the initial view of the map to Telangana with a suitable zoom level
-            map.setView([17.2041, 78.4560], 10); // Centering on Telangana with zoom level 10
+            map.setView([17.2041, 78.4560], 12); // Centering on Telangana with zoom level 10
 
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 18,
