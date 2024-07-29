@@ -130,10 +130,11 @@
                     bus21: filterBusData(data, 447)
                 };
 
+                updateBusMarkers(busData);
+
                 // Update device location marker
                 await updateDeviceLocationMarker();
 
-                updateBusMarkers(busData);
                 if (showCompleteMap) {
                     fitMapToMarkers(busData);
                 }
