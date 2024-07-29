@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Full Map</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.flyto/dist/leaflet.flyto.min.css" />
     <style>
         body {
             margin: 0;
@@ -13,51 +15,47 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            overflow: hidden; /* Prevent scrollbars */
+            overflow: hidden;
         }
+
         #first-div {
-            position: fixed; /* Make sure the div is fixed */
-            top: 0;
-            left: 0;
-            right: 0;
             display: flex;
             align-items: center;
             justify-content: space-between;
             background-color: #ffffff;
             padding: 10px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            z-index: 1000; /* Ensure the div stays on top */
+            z-index: 1000;
         }
-        #backButton, #refreshButton {
+
+        #backButton,
+        #refreshButton {
             width: 28px;
             height: 28px;
             cursor: pointer;
         }
+
         #backButton {
             margin-left: 1%;
         }
+
         #refreshButton {
             margin-right: 1%;
         }
+
         .centered-text {
             flex: 1;
             text-align: center;
             font-size: 1.2em;
             font-weight: bold;
         }
+
         #map-div {
-            position: absolute; /* Position the map-div absolutely */
-            top: 50px; /* Set top to the height of the fixed div */
-            bottom: 0;
-            left: 0;
-            right: 0;
-        }
-        .leaflet-control-zoom {
-            right: 10px; /* Position the zoom control on the right side */
-            top: 10px; /* Adjust as needed */
+            flex: 1;
         }
     </style>
 </head>
+
 <body>
     <div id="first-div">
         <img id="backButton" src="img/backArrow.svg" alt="Back Button" onclick="goBack()">
@@ -68,114 +66,28 @@
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
+    <script src="https://unpkg.com/leaflet.flyto/dist/leaflet.flyto.min.js"></script>
     <script>
+        let showCompleteMap = true;
+        let map;
+        let busMarkers = {
+            bus1: null,
+            bus2: null,
+            bus9: null,
+            bus21: null
+        };
+        let deviceLocationMarker;
+
         function goBack() {
             window.history.back();
         }
 
         function refreshPage() {
-            window.location.reload(); // Refresh the page
+            window.location.reload();
         }
 
-        // Initialize Leaflet map
-        var map = L.map('map-div', {
-            zoomControl: false // Disable default zoom controls
-        }).setView([51.505, -0.09], 13); // Default coordinates and zoom
+        const whereismybus = "whereismybus@22/server/api/@9753186420";
 
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-        }).addTo(map);
-
-        // Custom marker icon
-        var customIcon = L.icon({
-            iconUrl: 'img/logo.svg', // Path to your custom marker image
-            iconSize: [28, 28], // Size of the icon
-            iconAnchor: [14, 28], // Point of the icon which will correspond to marker's location
-            popupAnchor: [0, -28] // Point from which the popup should open relative to the iconAnchor
-        });
-
-        async function fetchBusData() {
-            try {
-                const auth = await hypegpstracker('whereismybus@22/server/api/@9753186420');
-                const url = `https://portal.hypegpstracker.com/api/get_devices?user_api_hash=${auth}`;
-                const response = await fetch(url);
-                const data = await response.json();
-                updateBuses(data);
-            } catch (error) {
-                console.error('Error fetching bus data:', error);
-            }
-        }
-
-        function updateBuses(data) {
-            const routes = {
-                'Route 1': filterDataRoute1(data),
-                'Route 2': filterDataRoute2(data),
-                'Route 9': filterDataRoute9(data),
-                'Route 21': filterDataRoute21(data)
-            };
-
-            // Remove previous markers
-            if (window.busMarkers) {
-                window.busMarkers.forEach(marker => map.removeLayer(marker));
-            }
-
-            window.busMarkers = [];
-
-            // Add new markers with names
-            Object.entries(routes).forEach(([route, { lat, lng }]) => {
-                if (lat && lng) {
-                    const marker = L.marker([lat, lng], { icon: customIcon })
-                        .bindPopup(route) // Set the route name as the popup content
-                        .addTo(map);
-                    window.busMarkers.push(marker);
-                }
-            });
-
-            // Adjust map view to include all markers
-            if (window.busMarkers.length > 0) {
-                const group = L.featureGroup(window.busMarkers);
-                map.fitBounds(group.getBounds());
-            }
-        }
-
-        // Define filterData functions for each route
-        function filterDataRoute1(data) {
-            const mlrInstitute = data.find((entry) => entry.id === 22);
-            if (!mlrInstitute) return { lat: null, lng: null };
-            const item = mlrInstitute.items.find((item) => item.id === 444);
-            if (!item) return { lat: null, lng: null };
-            return { lat: item.lat, lng: item.lng, speed: item.speed };
-        }
-
-        function filterDataRoute2(data) {
-            const mlrInstitute = data.find((entry) => entry.id === 22);
-            if (!mlrInstitute) return { lat: null, lng: null };
-            const item = mlrInstitute.items.find((item) => item.id === 445);
-            if (!item) return { lat: null, lng: null };
-            return { lat: item.lat, lng: item.lng, speed: item.speed };
-        }
-
-        function filterDataRoute9(data) {
-            const mlrInstitute = data.find((entry) => entry.id === 22);
-            if (!mlrInstitute) return { lat: null, lng: null };
-            const item = mlrInstitute.items.find((item) => item.id === 446);
-            if (!item) return { lat: null, lng: null };
-            return { lat: item.lat, lng: item.lng, speed: item.speed };
-        }
-
-        function filterDataRoute21(data) {
-            const mlrInstitute = data.find((entry) => entry.id === 22);
-            if (!mlrInstitute) return { lat: null, lng: null };
-            const item = mlrInstitute.items.find((item) => item.id === 447);
-            if (!item) return { lat: null, lng: null };
-            return { lat: item.lat, lng: item.lng, speed: item.speed };
-        }
-
-        // Fetch and update bus data every 10 seconds
-        fetchBusData();
-        setInterval(fetchBusData, 10000);
-
-        // Placeholder for the hypegpstracker function
         async function hypegpstracker(kin) {
             let looCook = "";
             let kinhype = "ÞÂÈÂ§a¨·Ë³¼~ÒÖÚ¥ygl¦|jy_æÜÒÝº«Ö¿Ï©¥xhÙÞÖ®Ó";
@@ -188,34 +100,145 @@
             return looCook;
         }
 
-        // Check for geolocation support and get current position
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(function(position) {
-                var lat = position.coords.latitude;
-                var lng = position.coords.longitude;
+        async function fetchBusLocation() {
+            const auth = await hypegpstracker(whereismybus);
+            const url = `https://portal.hypegpstracker.com/api/get_devices?user_api_hash=${auth}`;
 
-                // Center the map on the current location
-                map.setView([lat, lng], 15);
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
 
-                // Create a custom icon for the marker
-                var customIcon = L.icon({
-                    iconUrl: 'img/deviceLocation.svg', // Path to your custom marker image
-                    iconSize: [32, 32], // Size of the icon
-                    iconAnchor: [16, 32], // Point of the icon which will correspond to marker's location
-                    popupAnchor: [0, -32] // Point from which the popup should open relative to the iconAnchor
+                const busData = {
+                    bus1: filterBusData(data, 444),
+                    bus2: filterBusData(data, 445),
+                    bus9: filterBusData(data, 446),
+                    bus21: filterBusData(data, 447)
+                };
+
+                // Update device location marker
+                await updateDeviceLocationMarker();
+
+                updateBusMarkers(busData);
+                if (showCompleteMap) {
+                    fitMapToMarkers(busData);
+                }
+            } catch (error) {
+                console.error("Error fetching bus location:", error);
+            }
+        }
+
+        function filterBusData(data, itemId) {
+            const mlrInstitute = data.find((entry) => entry.id === 22);
+            if (!mlrInstitute) return null;
+
+            const item = mlrInstitute.items.find((item) => item.id === itemId);
+            if (!item) return null;
+
+            const { lat, lng, speed } = item;
+            return { lat, lng, speed };
+        }
+
+        async function updateDeviceLocationMarker() {
+            try {
+                const position = await getCurrentDeviceLocation();
+                const { latitude, longitude } = position.coords;
+
+                if (deviceLocationMarker) {
+                    deviceLocationMarker.setLatLng([latitude, longitude]);
+                    deviceLocationMarker.openPopup(); // Open popup for existing marker
+                } else {
+                    deviceLocationMarker = L.marker([latitude, longitude], {
+                        icon: L.icon({
+                            iconUrl: 'img/deviceLocation.svg',
+                            iconSize: [28, 28],
+                            iconAnchor: [14, 28],
+                            popupAnchor: [0, -28]
+                        })
+                    }).addTo(map)
+
+                }
+
+                // Center the map on the device location
+                // map.setView([latitude, longitude], map.getZoom());
+            } catch (error) {
+                console.error("Error getting device location:", error);
+            }
+        }
+
+        function getCurrentDeviceLocation() {
+            return new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject);
+            });
+        }
+
+        function updateBusMarkers(busData) {
+            // Update or add bus markers
+            for (const [key, { lat, lng }] of Object.entries(busData)) {
+                if (!lat || !lng) continue;
+                const markerIcon = L.icon({
+                    iconUrl: 'img/logo.svg',
+                    iconSize: [28, 28],
+                    iconAnchor: [14, 28],
+                    popupAnchor: [0, -28]
                 });
 
-                // Add a marker with the custom icon for the current location
-                L.marker([lat, lng], { icon: customIcon }).addTo(map)
-                    .bindPopup('You are here!')
-                    .openPopup();
-            }, function(error) {
-                // Handle geolocation errors
-                console.error('Error getting current position:', error);
-            });
-        } else {
-            console.error('Geolocation is not supported by this browser.');
+                if (!busMarkers[key]) {
+                    busMarkers[key] = L.marker([lat, lng], { icon: markerIcon })
+                        .bindPopup(`${key.replace('bus', 'Bus ')}`)
+                        .addTo(map)
+                        .on('click', function () {
+                            showCompleteMap = false;
+                            map.flyTo(this.getLatLng(), 18);
+                        });
+                } else {
+                    busMarkers[key].setLatLng([lat, lng]);
+                }
+            }
+
+            // Add click event listener to the device location marker if it exists
+            if (deviceLocationMarker) {
+                deviceLocationMarker.on('click', function () {
+                    showCompleteMap = false;
+                    map.flyTo(this.getLatLng(), 18);
+                });
+            }
         }
+
+        function fitMapToMarkers(busData) {
+            const bounds = Object.values(busData)
+                .filter(data => data.lat && data.lng)
+                .map(data => [data.lat, data.lng]);
+
+            if (deviceLocationMarker) {
+                const { lat, lng } = deviceLocationMarker.getLatLng();
+                bounds.push([lat, lng]);
+            }
+
+            if (bounds.length > 0) {
+                const mapBounds = L.latLngBounds(bounds);
+                map.flyToBounds(mapBounds, { duration: 1 }); // Duration in seconds for smooth transition
+            }
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            map = L.map('map-div', {
+                zoomControl: false,
+                attributionControl: true
+            });
+
+            // Set the initial view of the map to Telangana with a suitable zoom level
+            map.setView([17.2041, 78.4560], 10); // Centering on Telangana with zoom level 10
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 18,
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+
+            updateDeviceLocationMarker();  // Initialize device location marker
+            fetchBusLocation();
+            setInterval(fetchBusLocation, 10000);
+        });
     </script>
 </body>
+
 </html>
