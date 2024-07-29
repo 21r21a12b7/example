@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet.flyto/dist/leaflet.flyto.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster/dist/MarkerCluster.Default.css" />
     <style>
         body {
             margin: 0;
@@ -66,6 +67,7 @@
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.locatecontrol/dist/L.Control.Locate.min.js"></script>
     <script src="https://unpkg.com/leaflet.flyto/dist/leaflet.flyto.min.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster.js"></script>
     <script>
         let showCompleteMap = true;
         let map;
@@ -76,6 +78,20 @@
             bus21: null
         };
         let deviceLocationMarker;
+        let markersClusterGroup = L.markerClusterGroup({
+            // Customize cluster icon
+            iconCreateFunction: function (cluster) {
+                const childCount = cluster.getChildCount();
+                return L.divIcon({
+                    html: `<div style="background-color: white; color: black; border-radius: 50%; padding: 6px; font-size: 12px; text-align: center; border: 2px solid black; font-weight: bold;">
+                    ${childCount} Buses
+                </div>`,
+                    className: 'custom-cluster-icon',
+                    iconSize: [60, 60] // Size of the cluster icon
+                });
+            }
+        });
+
 
         function goBack() {
             window.history.back();
@@ -157,7 +173,6 @@
                         .addTo(map);
 
                     deviceLocationMarker.openPopup();
-
                 }
 
                 // Center the map on the device location
@@ -174,28 +189,38 @@
         }
 
         function updateBusMarkers(busData) {
-            // Update or add bus markers
+            const busIcons = {
+                bus1: 'img/one.svg',
+                bus2: 'img/two.svg',
+                bus9: 'img/nine.svg',
+                bus21: 'img/twentyone.svg'
+            };
+
+            // Clear previous markers from the cluster group
+            markersClusterGroup.clearLayers();
+
             for (const [key, { lat, lng }] of Object.entries(busData)) {
                 if (!lat || !lng) continue;
                 const markerIcon = L.icon({
-                    iconUrl: 'img/logo.svg',
+                    iconUrl: busIcons[key],
                     iconSize: [28, 28],
                     iconAnchor: [14, 28],
                     popupAnchor: [0, -28]
                 });
 
-                if (!busMarkers[key]) {
-                    busMarkers[key] = L.marker([lat, lng], { icon: markerIcon })
-                        .bindPopup(`<b>${key.replace('bus', 'Bus ')}</b>`)
-                        .addTo(map)
-                        .on('click', function () {
-                            showCompleteMap = false;
-                            map.flyTo(this.getLatLng(), 19);
-                        });
-                } else {
-                    busMarkers[key].setLatLng([lat, lng]);
-                }
+                const marker = L.marker([lat, lng], { icon: markerIcon })
+                    .bindPopup(`<b>${key.replace('bus', 'Bus ')}</b>`)
+                    .on('click', function () {
+                        showCompleteMap = false;
+                        map.flyTo(this.getLatLng(), 19);
+                    });
+
+                // Add marker to the cluster group
+                markersClusterGroup.addLayer(marker);
             }
+
+            // Add the cluster group to the map
+            map.addLayer(markersClusterGroup);
 
             // Add click event listener to the device location marker if it exists
             if (deviceLocationMarker) {
@@ -218,9 +243,7 @@
 
             if (bounds.length > 0) {
                 const mapBounds = L.latLngBounds(bounds);
-                // Add padding to the map bounds
                 map.flyToBounds(mapBounds, {
-                    // duration: 3, // Duration in seconds for smooth transition
                     padding: [50, 50] // Padding in pixels [top-bottom, left-right]
                 });
             }
@@ -235,33 +258,44 @@
             // Define base layers
             const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 19,
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-            });
-
-            const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-                maxZoom: 19,
-                attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>'
-            });
-
-            // Add initial layer
-            streetLayer.addTo(map);
-
-            // Layer control
-            L.control.layers({
-                "Street View": streetLayer,
-                "Satellite View": satelliteLayer
+                attribution: '© OpenStreetMap contributors'
             }).addTo(map);
 
-            // Set the initial view of the map to Telangana with a suitable zoom level
-            map.setView([17.1232, 78.2338], 10);
+            const satelliteLayer = L.tileLayer('https://{s}.satellite.maps.api/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© Satellite Maps API'
+            });
 
-            // Start fetching the bus location data
+            // Add layer control
+            const baseLayers = {
+                "Street View": streetLayer,
+                "Satellite View": satelliteLayer
+            };
+            L.control.layers(baseLayers).addTo(map);
+
+            // Set a default view
+            map.setView([17.3850, 78.4867], 14);
+
+            // Fetch bus locations every 10 seconds
             fetchBusLocation();
+            setInterval(fetchBusLocation, 10000);
 
-            // Optionally, you can set an interval to update the bus locations periodically
-            setInterval(fetchBusLocation, 10000); // Update every 10 seconds
+            // // Add zoom control with a custom position
+            // L.control.zoom({
+            //     position: 'topright'
+            // }).addTo(map);
+
+            // // Add locate control
+            // L.control.locate({
+            //     position: 'topright',
+            //     flyTo: true
+            // }).addTo(map);
+
+            // Add marker cluster group to the map
+            map.addLayer(markersClusterGroup);
         });
     </script>
+
 </body>
 
 </html>
