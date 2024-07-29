@@ -113,10 +113,6 @@
                     bus2: filterBusData(data, 445),
                     bus9: filterBusData(data, 446),
                     bus21: filterBusData(data, 447)
-
-                    // bus1: filterBusData(data, 378),
-                    // bus2: filterBusData(data, 382),
-                    // bus9: filterBusData(data, 388),
                 };
 
                 // Update device location marker
@@ -231,24 +227,40 @@
             }
         }
 
-
         document.addEventListener("DOMContentLoaded", function () {
             map = L.map('map-div', {
                 zoomControl: false,
                 attributionControl: true
             });
 
-            // Set the initial view of the map to Telangana with a suitable zoom level
-            map.setView([17.2041, 78.4560], 10); // Centering on Telangana with zoom level 10
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            // Define base layers
+            const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 maxZoom: 18,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            });
+
+            const satelliteLayer = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                maxZoom: 19,
+                attribution: '&copy; <a href="https://carto.com/attributions">CARTO</a>'
+            });
+
+            // Add initial layer
+            streetLayer.addTo(map);
+
+            // Layer control
+            L.control.layers({
+                "Street View": streetLayer,
+                "Satellite View": satelliteLayer
             }).addTo(map);
 
-            // updateDeviceLocationMarker();  // Initialize device location marker
+            // Set the initial view of the map to Telangana with a suitable zoom level
+            map.setView([17.1232, 78.2338], 10);
+
+            // Start fetching the bus location data
             fetchBusLocation();
-            setInterval(fetchBusLocation, 10000);
+
+            // Optionally, you can set an interval to update the bus locations periodically
+            setInterval(fetchBusLocation, 10000); // Update every 10 seconds
         });
     </script>
 </body>
