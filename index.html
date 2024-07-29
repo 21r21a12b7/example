@@ -157,7 +157,10 @@
                             iconAnchor: [14, 28],
                             popupAnchor: [0, -28]
                         })
-                    }).addTo(map)
+                    })
+                        .bindPopup("It's You") // Add popup with text "It's You"
+                        .addTo(map);
+
 
                 }
 
