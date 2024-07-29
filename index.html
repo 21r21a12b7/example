@@ -191,7 +191,7 @@
                         .addTo(map)
                         .on('click', function () {
                             showCompleteMap = false;
-                            map.flyTo(this.getLatLng(), 18);
+                            map.flyTo(this.getLatLng(), 19);
                         });
                 } else {
                     busMarkers[key].setLatLng([lat, lng]);
@@ -202,7 +202,7 @@
             if (deviceLocationMarker) {
                 deviceLocationMarker.on('click', function () {
                     showCompleteMap = false;
-                    map.flyTo(this.getLatLng(), 18);
+                    map.flyTo(this.getLatLng(), 19);
                 });
             }
         }
@@ -235,7 +235,7 @@
 
             // Define base layers
             const streetLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 18,
+                maxZoom: 19,
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             });
 
