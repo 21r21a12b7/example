@@ -109,10 +109,14 @@
                 const data = await response.json();
 
                 const busData = {
+                    // bus1: filterBusData(data, 444),
+                    // bus2: filterBusData(data, 445),
+                    // bus9: filterBusData(data, 446),
+                    // bus21: filterBusData(data, 447)
+
                     bus1: filterBusData(data, 378),
                     bus2: filterBusData(data, 382),
                     bus9: filterBusData(data, 388),
-                    bus21: filterBusData(data, 447)
                 };
 
                 // Update device location marker
@@ -128,7 +132,7 @@
         }
 
         function filterBusData(data, itemId) {
-            const mlrInstitute = data.find((entry) => entry.id === 22);
+            const mlrInstitute = data.find((entry) => entry.id === 23);
             if (!mlrInstitute) return null;
 
             const item = mlrInstitute.items.find((item) => item.id === itemId);
@@ -216,9 +220,14 @@
 
             if (bounds.length > 0) {
                 const mapBounds = L.latLngBounds(bounds);
-                map.flyToBounds(mapBounds, { duration: 1 }); // Duration in seconds for smooth transition
+                // Add padding to the map bounds
+                map.flyToBounds(mapBounds, {
+                    duration: 1, // Duration in seconds for smooth transition
+                    padding: [50, 50] // Padding in pixels [top-bottom, left-right]
+                });
             }
         }
+
 
         document.addEventListener("DOMContentLoaded", function () {
             map = L.map('map-div', {
