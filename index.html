@@ -153,10 +153,10 @@
                             popupAnchor: [0, -28]
                         })
                     })
-                        .bindPopup("It's You") // Add popup with text "It's You"
+                        .bindPopup("<b>It's You</b>") // Add popup with text "It's You"
                         .addTo(map);
 
-                        deviceLocationMarker.openPopup();
+                    deviceLocationMarker.openPopup();
 
                 }
 
@@ -186,7 +186,7 @@
 
                 if (!busMarkers[key]) {
                     busMarkers[key] = L.marker([lat, lng], { icon: markerIcon })
-                        .bindPopup(`${key.replace('bus', 'Bus ')}`)
+                        .bindPopup(`<b>${key.replace('bus', 'Bus ')}</b>`)
                         .addTo(map)
                         .on('click', function () {
                             showCompleteMap = false;
